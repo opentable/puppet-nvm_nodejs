@@ -54,7 +54,7 @@ class nvm_nodejs (
   }
 
   exec { 'nvm-install-node':
-    command     => "source ${home}/.nvm/nvm.sh && nvm install ${version}",
+    command     => ". ${home}/.nvm/nvm.sh && nvm install ${version}",
     cwd         => $home,
     user        => $user,
     unless      => "test -e ${home}/.nvm/v${version}/bin/node",
