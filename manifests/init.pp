@@ -35,6 +35,10 @@ class nvm_nodejs (
   $NPM_EXEC   = "${NODE_PATH}/npm"
 
   # dependency check
+  ensure_resource('package', 'git', { ensure => installed })
+  ensure_resource('package', 'curl', { ensure => installed})
+  ensure_resource('package', 'make', { ensure => installed})
+
   exec { 'check-needed-packages':
     command     => 'which git && which curl && which make',
     user        => $user,
