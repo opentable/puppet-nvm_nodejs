@@ -38,25 +38,23 @@ class nvm_nodejs (
   ensure_resource('package', 'git', { ensure => installed })
   ensure_resource('package', 'curl', { ensure => installed})
   ensure_resource('package', 'make', { ensure => installed})
-
-  exec { 'check-needed-packages':
-    command     => 'which git && which curl && which make',
-    user        => $user,
-    environment => [ "HOME=${home}" ],
-    require     => User[$user],
-  }
-
+  ensure_resource('user', $user, { 
+                                   ensure     => present,
+                                   shell      => '/bin/bash',
+                                   home       => $home,
+                                   managehome => true,
+                                 });
+  
   # install via script
   exec { 'nvm-install-script':
     command     => 'curl https://raw.github.com/creationix/nvm/master/install.sh | sh',
     cwd         => $home,
     user        => $user,
     creates     => "${home}/.nvm/nvm.sh",
-    # onlyif      => [ 'which git', 'which curl', 'which make' ],
     environment => [ "HOME=${home}" ],
     refreshonly => true,
   }
-
+  
   exec { 'nvm-install-node':
     command     => ". ${home}/.nvm/nvm.sh && nvm install ${version}",
     cwd         => $home,
@@ -74,14 +72,9 @@ class nvm_nodejs (
     environment => [ "HOME=${home}" ],
     refreshonly => true,
   }
-
-  # # print path
-  # notify { 'node-exec':
-  #   message => "nvm_nodejs, node executable is ${NODE_EXEC}",
-  # }
-
+  
   # order of things
-  Exec['check-needed-packages']~>Exec['nvm-install-script']
-    ~>Exec['nvm-install-node']~>Exec['nodejs-check'] # ~>Notify['node-exec']
+  Exec['nvm-install-script']
+    ~>Exec['nvm-install-node']~>Exec['nodejs-check']
 }
 
