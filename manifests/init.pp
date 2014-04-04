@@ -19,16 +19,6 @@ class nvm_nodejs (
   validate_re($version, '^\d+\.\d+\.\d+$',
     'Please specify a valid nodejs version, format: x.x.x (e.g. 0.8.10)')
 
-  if ! defined(User[$user]) {
-    # create the user
-    user { $user:
-      ensure     => present,
-      shell      => '/bin/bash',
-      home       => $home,
-      managehome => true,
-    }
-  }
-
   # node path and executable
   $NODE_PATH  = "${home}/.nvm/v${version}/bin"
   $NODE_EXEC  = "${NODE_PATH}/node"
