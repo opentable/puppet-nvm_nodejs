@@ -28,12 +28,6 @@ class nvm_nodejs (
   ensure_resource('package', 'git', { ensure => installed })
   ensure_resource('package', 'curl', { ensure => installed})
   ensure_resource('package', 'make', { ensure => installed})
-  ensure_resource('user', $user, { 
-                                   ensure     => present,
-                                   shell      => '/bin/bash',
-                                   home       => $home,
-                                   managehome => true,
-                                 })
   
   # install via script
   exec { 'nvm-install-script':
