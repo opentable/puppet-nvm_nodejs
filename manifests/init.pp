@@ -33,7 +33,7 @@ class nvm_nodejs (
                                    shell      => '/bin/bash',
                                    home       => $home,
                                    managehome => true,
-                                 });
+                                 })
   
   # install via script
   exec { 'nvm-install-script':
