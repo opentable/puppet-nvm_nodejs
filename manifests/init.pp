@@ -36,7 +36,6 @@ class nvm_nodejs (
     user        => $user,
     creates     => "${home}/.nvm/nvm.sh",
     environment => [ "HOME=${home}" ],
-    refreshonly => true,
   }
   
   exec { 'nvm-install-node':
@@ -46,7 +45,6 @@ class nvm_nodejs (
     unless      => "test -e ${home}/.nvm/v${version}/bin/node",
     provider    => shell,
     environment => [ "HOME=/${home}", "NVM_DIR=${home}/.nvm" ],
-    refreshonly => true,
   }
 
   # sanity check
