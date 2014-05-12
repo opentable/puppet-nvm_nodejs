@@ -29,22 +29,32 @@ class nvm_nodejs (
   ensure_resource('package', 'curl', { ensure => installed})
   ensure_resource('package', 'make', { ensure => installed})
   
-  # install via script
-  exec { 'nvm-install-script':
-    command     => 'curl https://raw.github.com/creationix/nvm/master/install.sh | sh',
-    cwd         => $home,
-    user        => $user,
-    creates     => "${home}/.nvm/nvm.sh",
-    environment => [ "HOME=${home}" ],
+  # create nvm folder
+  file { "${home}/.nvm":
+    ensure => directory,
+    owner  => $user,
+    group  => $user,
+    mode   => '0775',
   }
-  
-  exec { 'nvm-install-node':
-    command     => ". ${home}/.nvm/nvm.sh && nvm install ${version}",
+
+  exec { 'nvm-download-node':
+    command     => "wget -q0 http://nodejs.org/dist/v${version}/node-v${version}-linux-x64.tar.gz",
+    # http://nodejs.org/dist/v0.10.28/node-v0.10.28-linux-x64.tar.gz
     cwd         => $home,
     user        => $user,
     unless      => "test -e ${home}/.nvm/v${version}/bin/node",
     provider    => shell,
-    environment => [ "HOME=/${home}", "NVM_DIR=${home}/.nvm" ],
+    creates     => "node-v${version}-linux-x64.tar.gz"
+    #environment => [ "HOME=/${home}", "NVM_DIR=${home}/.nvm" ],
+  }
+
+  exec { 'nvm-install-node':
+    command     => "tar -xvf node-v${version}-linux-x64.tar.gz && mv node-v${version}-linux-x64.tar.gz .nvm/v${version}",
+    cwd         => $home,
+    user        => $user,
+    unless      => "test -e ${home}/.nvm/v${version}/bin/node",
+    provider    => shell,
+    creates     => ".nvm/v${version}"
   }
 
   # sanity check
@@ -56,7 +66,7 @@ class nvm_nodejs (
   }
   
   # order of things
-  Exec['nvm-install-script']
+  File["${home}/.nvm"] ~> Exec['nvm-download-node']
     ~>Exec['nvm-install-node']~>Exec['nodejs-check']
 }
 
