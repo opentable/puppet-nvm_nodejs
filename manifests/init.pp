@@ -38,23 +38,29 @@ class nvm_nodejs (
   }
 
   exec { 'nvm-download-node':
-    command     => "wget -q0 http://nodejs.org/dist/v${version}/node-v${version}-linux-x64.tar.gz",
+    command     => "wget -q http://nodejs.org/dist/v${version}/node-v${version}-linux-x64.tar.gz",
     # http://nodejs.org/dist/v0.10.28/node-v0.10.28-linux-x64.tar.gz
     cwd         => $home,
     user        => $user,
     unless      => "test -e ${home}/.nvm/v${version}/bin/node",
     provider    => shell,
-    creates     => "node-v${version}-linux-x64.tar.gz"
+    creates     => "${home}/node-v${version}-linux-x64.tar.gz"
     #environment => [ "HOME=/${home}", "NVM_DIR=${home}/.nvm" ],
   }
 
-  exec { 'nvm-install-node':
-    command     => "tar -xvf node-v${version}-linux-x64.tar.gz && mv node-v${version}-linux-x64.tar.gz .nvm/v${version}",
+  exec { 'nvm-extract-node':
+    command     => "tar -xvf node-v${version}-linux-x64.tar.gz",
     cwd         => $home,
     user        => $user,
-    unless      => "test -e ${home}/.nvm/v${version}/bin/node",
+    provider    => shell
+  }
+
+  exec { 'nvm-install-node':
+    command     => "mv node-v${version}-linux-x64 .nvm/v${version}",
+    cwd         => $home,
+    user        => $user,
     provider    => shell,
-    creates     => ".nvm/v${version}"
+    creates     => "${home}/.nvm/v${version}"
   }
 
   # sanity check
