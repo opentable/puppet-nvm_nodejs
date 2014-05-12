@@ -25,11 +25,6 @@ class nvm_nodejs (
   $NPM_EXEC   = "${NODE_PATH}/npm"
   $filename   = "node-v${version}-linux-x64"
 
-  # dependency check
-  ensure_resource('package', 'git', { ensure => installed })
-  ensure_resource('package', 'curl', { ensure => installed})
-  ensure_resource('package', 'make', { ensure => installed})
-  
   # create nvm folder
   file { "${home}/.nvm":
     ensure      => directory,
