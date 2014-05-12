@@ -30,7 +30,7 @@ class nvm_nodejs (
     ensure      => directory,
     owner       => $user,
     group       => $user,
-    mode        => '0775',
+    mode        => '0775'
   }
 
   exec { 'nvm-download-node':
@@ -38,7 +38,7 @@ class nvm_nodejs (
     cwd         => $home,
     user        => $user,
     provider    => shell,
-    creates     => "${home}/${filename}.tar.gz"
+    unless      => "test -d ${home}/.nvm/v${version}"
   }
 
   exec { 'nvm-extract-node':
@@ -46,7 +46,6 @@ class nvm_nodejs (
     cwd         => $home,
     user        => $user,
     provider    => shell,
-    creates     => "${home}/${filename}",
     refreshonly => true
   }
 
@@ -58,18 +57,24 @@ class nvm_nodejs (
     creates     => "${home}/.nvm/v${version}",
     refreshonly => true
   }
+  
+  exec { 'nvm-cleanup':
+    command     => "rm ${filename}.tar.gz",
+    cwd         => $home,
+    user        => $user,
+    provider    => shell,
+    refreshonly => true
+  }
 
   # sanity check
-  exec { 'nodejs-check':
+  exec { "check-node-v${version}":
     command     => "${NODE_EXEC} -v",
     user        => $user,
-    environment => [ "HOME=${home}" ],
     refreshonly => true,
   }
-  
-  # order of things
-  File["${home}/.nvm"] ~> Exec['nvm-download-node']
-    ~> Exec['nvm-extract-node'] ~> Exec['nvm-install-node']
-    ~> Exec['nodejs-check']
-}
 
+  File["${home}/.nvm"] ~> Exec['nvm-download-node']
+  ~> Exec['nvm-extract-node'] ~> Exec['nvm-install-node']
+  ~> Exec['nvm-cleanup'] ~> Exec["check-node-v${version}"]
+
+}
