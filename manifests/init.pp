@@ -23,6 +23,7 @@ class nvm_nodejs (
   $NODE_PATH  = "${home}/.nvm/v${version}/bin"
   $NODE_EXEC  = "${NODE_PATH}/node"
   $NPM_EXEC   = "${NODE_PATH}/npm"
+  $filename   = "node-v${version}-linux-x64"
 
   # dependency check
   ensure_resource('package', 'git', { ensure => installed })
@@ -31,36 +32,36 @@ class nvm_nodejs (
   
   # create nvm folder
   file { "${home}/.nvm":
-    ensure => directory,
-    owner  => $user,
-    group  => $user,
-    mode   => '0775',
+    ensure      => directory,
+    owner       => $user,
+    group       => $user,
+    mode        => '0775',
   }
 
   exec { 'nvm-download-node':
-    command     => "wget -q http://nodejs.org/dist/v${version}/node-v${version}-linux-x64.tar.gz",
-    # http://nodejs.org/dist/v0.10.28/node-v0.10.28-linux-x64.tar.gz
+    command     => "wget -q http://nodejs.org/dist/v${version}/${filename}.tar.gz",
     cwd         => $home,
     user        => $user,
-    unless      => "test -e ${home}/.nvm/v${version}/bin/node",
     provider    => shell,
-    creates     => "${home}/node-v${version}-linux-x64.tar.gz"
-    #environment => [ "HOME=/${home}", "NVM_DIR=${home}/.nvm" ],
+    creates     => "${home}/${filename}.tar.gz"
   }
 
   exec { 'nvm-extract-node':
-    command     => "tar -xvf node-v${version}-linux-x64.tar.gz",
-    cwd         => $home,
-    user        => $user,
-    provider    => shell
-  }
-
-  exec { 'nvm-install-node':
-    command     => "mv node-v${version}-linux-x64 .nvm/v${version}",
+    command     => "tar -xvf ${filename}.tar.gz",
     cwd         => $home,
     user        => $user,
     provider    => shell,
-    creates     => "${home}/.nvm/v${version}"
+    creates     => "${home}/${filename}",
+    refreshonly => true
+  }
+
+  exec { 'nvm-install-node':
+    command     => "mv ${filename} .nvm/v${version}",
+    cwd         => $home,
+    user        => $user,
+    provider    => shell,
+    creates     => "${home}/.nvm/v${version}",
+    refreshonly => true
   }
 
   # sanity check
@@ -73,6 +74,7 @@ class nvm_nodejs (
   
   # order of things
   File["${home}/.nvm"] ~> Exec['nvm-download-node']
-    ~>Exec['nvm-install-node']~>Exec['nodejs-check']
+    ~> Exec['nvm-extract-node'] ~> Exec['nvm-install-node']
+    ~> Exec['nodejs-check']
 }
 
